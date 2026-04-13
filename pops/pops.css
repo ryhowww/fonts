@@ -1,0 +1,93 @@
+/* Pops — Custom font based on Poppins (SIL OFL 1.1)
+ * Modifications: straight t, rectangular i/j/period dots, crossing Q tail, scaled caps
+ */
+
+/* Thin (100) */
+@font-face {
+  font-family: "Pops";
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url("Pops-Thin.woff2") format("woff2");
+}
+
+/* ExtraLight (200) */
+@font-face {
+  font-family: "Pops";
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url("Pops-ExtraLight.woff2") format("woff2");
+}
+
+/* Light (300) */
+@font-face {
+  font-family: "Pops";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("Pops-Light.woff2") format("woff2");
+}
+
+/* Regular (400) */
+@font-face {
+  font-family: "Pops";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("Pops-Regular.woff2") format("woff2");
+}
+
+/* Medium (500) */
+@font-face {
+  font-family: "Pops";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("Pops-Medium.woff2") format("woff2");
+}
+
+/* SemiBold (600) */
+@font-face {
+  font-family: "Pops";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("Pops-SemiBold.woff2") format("woff2");
+}
+
+/* Bold (700) */
+@font-face {
+  font-family: "Pops";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("Pops-Bold.woff2") format("woff2");
+}
+
+/* ExtraBold (800) */
+@font-face {
+  font-family: "Pops";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("Pops-ExtraBold.woff2") format("woff2");
+}
+
+/* Black (900) */
+@font-face {
+  font-family: "Pops";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("Pops-Black.woff2") format("woff2");
+}
+
+/* Italic (400) */
+@font-face {
+  font-family: "Pops";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("Pops-Italic.woff2") format("woff2");
+}
