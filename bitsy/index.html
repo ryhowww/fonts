@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitsy — A typeface family</title>
+<style>
+@font-face { font-family: "Bitsy"; font-weight: 200; src: url("Bitsy-ExtraLight.woff2") format("woff2"); }
+@font-face { font-family: "Bitsy"; font-weight: 300; src: url("Bitsy-Light.woff2") format("woff2"); }
+@font-face { font-family: "Bitsy"; font-weight: 400; src: url("Bitsy-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Bitsy"; font-weight: 500; src: url("Bitsy-Medium.woff2") format("woff2"); }
+@font-face { font-family: "Bitsy"; font-weight: 600; src: url("Bitsy-SemiBold.woff2") format("woff2"); }
+@font-face { font-family: "Bitsy"; font-weight: 700; src: url("Bitsy-Bold.woff2") format("woff2"); }
+@font-face { font-family: "Bitsy"; font-weight: 800; src: url("Bitsy-ExtraBold.woff2") format("woff2"); }
+@font-face { font-family: "Bitsy"; font-weight: 900; src: url("Bitsy-Black.woff2") format("woff2"); }
+
+:root {
+  --fg: #111;
+  --fg-muted: #666;
+  --fg-subtle: #999;
+  --bg: #fff;
+  --bg-alt: #f5f5f5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #eee;
+    --fg-muted: #aaa;
+    --fg-subtle: #666;
+    --bg: #111;
+    --bg-alt: #1a1a1a;
+  }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: "Bitsy", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.hero {
+  padding: 8rem 0 6rem;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: clamp(4rem, 12vw, 10rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+  margin-bottom: 1.5rem;
+}
+
+.hero .subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-weight: 300;
+  color: var(--fg-muted);
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+section {
+  padding: 5rem 0;
+}
+
+section.alt {
+  background: var(--bg-alt);
+}
+
+.size-label {
+  font-size: 0.7rem;
+  color: var(--fg-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+  font-weight: 400;
+}
+
+.weight-row {
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.2;
+  padding: 0.5rem 0;
+}
+
+.specimen-large {
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.specimen {
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  line-height: 1.4;
+  font-weight: 400;
+  max-width: 900px;
+}
+
+.changes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 3rem;
+  margin-top: 2rem;
+}
+
+.change-item h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.change-item p {
+  color: var(--fg-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.change-demo {
+  font-size: 4rem;
+  font-weight: 400;
+  margin: 1rem 0;
+  letter-spacing: 0.05em;
+}
+
+.change-demo.heavy {
+  font-weight: 800;
+}
+
+.glyphs-row {
+  font-size: clamp(2rem, 6vw, 5rem);
+  font-weight: 400;
+  line-height: 1.3;
+  word-break: break-all;
+  letter-spacing: 0.02em;
+}
+
+.size-demo { margin-bottom: 1.5rem; }
+
+footer {
+  padding: 4rem 0;
+  text-align: center;
+  color: var(--fg-subtle);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+footer a {
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: var(--fg);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="hero">
+    <h1>Bitsy</h1>
+    <p class="subtitle">A typeface family built from Inter Display with an angled y, rectangular dots, and aligned punctuation. Eight weights for web.</p>
+  </div>
+</div>
+
+<section class="alt">
+  <div class="container">
+    <div class="size-label">Extra Light</div>
+    <div class="weight-row" style="font-weight:200">Whisper thin, still legible</div>
+    <div class="size-label">Light</div>
+    <div class="weight-row" style="font-weight:300">Effortless reading at any size</div>
+    <div class="size-label">Regular</div>
+    <div class="weight-row" style="font-weight:400">The workhorse. Set it and forget it.</div>
+    <div class="size-label">Medium</div>
+    <div class="weight-row" style="font-weight:500">Just enough emphasis to notice</div>
+    <div class="size-label">Semi Bold</div>
+    <div class="weight-row" style="font-weight:600">Subheadings that earn their keep</div>
+    <div class="size-label">Bold</div>
+    <div class="weight-row" style="font-weight:700">Headlines with conviction</div>
+    <div class="size-label">Extra Bold</div>
+    <div class="weight-row" style="font-weight:800">When you really mean it</div>
+    <div class="size-label">Black</div>
+    <div class="weight-row" style="font-weight:900">Statement. Period.</div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="size-label">Specimen</div>
+    <p class="specimen-large">The quick brown fox jumps over the lazy dog.</p>
+    <br><br>
+    <p class="specimen">Every piece of typography you set should make the reader's job easier, not yours. Clarity isn't a constraint. It's the whole point. Good type disappears; great type elevates.</p>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="container">
+    <div class="size-label">What changed</div>
+    <div class="changes">
+      <div class="change-item">
+        <h3>Angled y descender</h3>
+        <p>The right diagonal continues as the descender instead of curving left. Inspired by Questrial's clean geometric approach.</p>
+        <div class="change-demo">yet yes yell</div>
+        <div class="change-demo heavy">yet yes yell</div>
+      </div>
+      <div class="change-item">
+        <h3>Rectangular dots</h3>
+        <p>Circular dots on i, j, period, colon, semicolon, and punctuation replaced with rectangles. Taller at light weights, stumpier at heavy.</p>
+        <div class="change-demo">i j . : ; ! ?</div>
+        <div class="change-demo heavy">i j . : ; ! ?</div>
+      </div>
+      <div class="change-item">
+        <h3>Raised t</h3>
+        <p>The t ascender raised to close the gap with the i dot, bringing vertical rhythm to mixed lowercase text.</p>
+        <div class="change-demo">tilt tight</div>
+        <div class="change-demo heavy">tilt tight</div>
+      </div>
+      <div class="change-item">
+        <h3>Aligned punctuation</h3>
+        <p>Period and colon bottom sit on the baseline. Semicolon top matches colon. Everything lines up.</p>
+        <div class="change-demo">time: 4:30;</div>
+        <div class="change-demo heavy">time: 4:30;</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="size-label">At size</div>
+    <div class="size-demo">
+      <div class="size-label">72px Bold</div>
+      <div style="font-size:72px;font-weight:700;line-height:1.1">Jittery justice. Typing yesterday's injection.</div>
+    </div>
+    <div class="size-demo">
+      <div class="size-label">36px Regular</div>
+      <div style="font-size:36px;font-weight:400;line-height:1.35">Complete Web Resources specializes in SEO-driven web design for local businesses across Austin and beyond. Our tight integration of technical optimization, content strategy, and performance engineering delivers measurable results.</div>
+    </div>
+    <div class="size-demo">
+      <div class="size-label">18px Regular</div>
+      <div style="font-size:18px;font-weight:400;line-height:1.6">Typography is the craft of endowing human language with a durable visual form, and thus with an independent existence. Its heartwood is calligraphy — the dance, on a tiny stage, of the living, speaking hand — and its roots reach into living soil, though its branches may be hung each year with new and different fruit. So long as the root lives, typography remains a source of true delight, true knowledge, true surprise.</div>
+    </div>
+    <div class="size-demo">
+      <div class="size-label">14px Regular</div>
+      <div style="font-size:14px;font-weight:400;line-height:1.6;max-width:640px">Performance matters. Bitsy ships as static WOFF2 files at approximately 34KB per weight. Load only the weights you need — two or three covers most sites at under 100KB total. Built from Inter Display, optimized for headings and UI text at 16px and above.</div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="container">
+    <div class="size-label">Glyphs</div>
+    <div class="glyphs-row">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+    <div class="glyphs-row">abcdefghijklmnopqrstuvwxyz</div>
+    <div class="glyphs-row">0123456789</div>
+    <div class="glyphs-row" style="font-size:clamp(1.5rem,4vw,3.5rem)">.,:;!?'"()-/\@#$%&*+=_~^|{}[]&lt;&gt;</div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>Bitsy is built from <a href="https://rsms.me/inter/">Inter Display</a> v4.1 under the <a href="https://openfontlicense.org/">SIL Open Font License</a>.</p>
+    <p>Source and downloads on <a href="https://github.com/ryhowww/fonts">GitHub</a>.</p>
+  </div>
+</footer>
+
+</body>
+</html>
