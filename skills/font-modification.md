@@ -223,9 +223,20 @@ def subset_font(input_path, output_path):
 
 | Font | Base | Repo path | Weights | Key modifications |
 |------|------|-----------|---------|-------------------|
-| Pops | Poppins | `fonts/pops/` | 100-900 + italic | Straight t, rect dots, Q tail, scaled caps |
-| Pips | Pops subset | `fonts/pips/` | 200-800 + italic | English-only charset (~7.5KB/weight) |
-| Nter | Inter Display | `fonts/nter/` | 200-900 | Angled y, rect dots, raised t, aligned punctuation |
+| Bitsy | Inter Display statics | `fonts/bitsy/` | 200-900 | Straight y, rect dots, raised t |
+| Inty | InterVariable | `fonts/inty/` | variable 100-900 + opsz | ss07+cv11 frozen (square punct, 1-story a), straight t, squared ¡¿÷ |
+
+(Pops/Pips — Poppins variants — retired 2026-07-23, recoverable from git history.)
+
+### Variable-font lesson (Inty, 2026-07-23)
+
+Inter 4.x already ships square punctuation as **ss07** and single-story a as
+**cv11** — check for existing stylistic sets/character variants BEFORE doing
+glyph surgery. Freeze features by injecting their GSUB lookups into always-on
+`ccmp` (NOT cmap remap: keeps case/tf/calt chains intact). For outline surgery
+on a variable font: compute the new outline at each master (default + corners),
+keep topology fixed, and rebuild the glyph's gvar tuples mirroring the font's
+own tuple structure. Full recipe: `fonts/inty/build.py`.
 
 ## References
 

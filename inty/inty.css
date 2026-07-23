@@ -1,0 +1,12 @@
+/* Inty — Inter with square punctuation + straight t (OFL 1.1)
+ * Variable: wght 100-900, opsz 14-32 (auto via font-optical-sizing)
+ * All Inter features intact: cv11 single-story a, ss03 round quotes & commas,
+ * ss08 square quotes, tnum, case, ... e.g. font-feature-settings: 'cv11' 1;
+ */
+@font-face {
+  font-family: "Inty";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("Inty-Variable.woff2") format("woff2");
+}
