@@ -373,6 +373,40 @@ def export_subset(ttf_path, out_path):
     f.close()
 
 
+# Aggressive production web font (Pips precedent): English-only charset,
+# only site-useful features, no hinting. Both axes stay variable.
+WEB_UNICODES = (
+    list(range(0x0020, 0x007F)) +                 # ASCII
+    [0x00A0, 0x00A1, 0x00A2, 0x00A3, 0x00A5, 0x00A7, 0x00A9, 0x00AE,
+     0x00B0, 0x00B7, 0x00BF, 0x00D7, 0x00F7,      # nbsp ¡ ¢ £ ¥ § © ® ° · ¿ × ÷
+     0x2013, 0x2014,                              # en/em dash
+     0x2018, 0x2019, 0x201A, 0x201C, 0x201D, 0x201E,  # curly quotes
+     0x2022, 0x2026, 0x20AC, 0x2122, 0x2212]      # bullet … € ™ −
+)
+# ccmp carries the frozen ss07/cv11 lookups — it MUST stay.
+WEB_FEATURES = ["ccmp", "kern", "calt", "liga", "tnum", "zero", "case",
+                "ss03", "ss08"]
+# OFL compliance: keep copyright (0), license (13/14) alongside naming IDs.
+WEB_NAME_IDS = [0, 1, 2, 3, 4, 6, 13, 14, 16, 17, 25]
+
+
+def export_web(ttf_path, out_path):
+    opts = subset.Options()
+    opts.layout_features = WEB_FEATURES
+    opts.name_IDs = WEB_NAME_IDS
+    opts.notdef_outline = True
+    opts.hinting = False
+    s = subset.Subsetter(options=opts)
+    s.populate(unicodes=WEB_UNICODES)
+    f = TTFont(str(ttf_path))
+    s.subset(f)
+    f.flavor = "woff2"
+    f.save(str(out_path))
+    n_glyphs = f["maxp"].numGlyphs
+    f.close()
+    return n_glyphs
+
+
 def build_one(src, subfamily, stem):
     print(f"Loading {src}")
     vf = TTFont(src)
@@ -402,6 +436,11 @@ def build_one(src, subfamily, stem):
     ws = OUT / f"{stem}-subset.woff2"
     export_subset(ttf, ws)
     print(f"  Saved {ws.name} ({os.path.getsize(ws)/1024:.0f} KB)")
+
+    web_name = stem.replace("-Variable", "-Web")
+    ww = OUT / f"{web_name}.woff2"
+    ng = export_web(ttf, ww)
+    print(f"  Saved {ww.name} ({os.path.getsize(ww)/1024:.0f} KB, {ng} glyphs)")
 
 
 def main():

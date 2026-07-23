@@ -21,8 +21,10 @@ remain live and toggleable — notably `ss03` (round quotes & commas back),
 
 | File | Use |
 |------|-----|
+| `Inty-Web.woff2` (46 KB) | **Production sites** — English-only + smart punctuation, hints stripped |
+| `Inty-Italic-Web.woff2` (50 KB) | Production italic, same subset |
 | `Inty-Variable.woff2` (344 KB) | Web, full glyph set |
-| `Inty-Variable-subset.woff2` (142 KB) | Web, Latin + punctuation (use this for sites) |
+| `Inty-Variable-subset.woff2` (142 KB) | Web, Latin + punctuation (accented chars) |
 | `Inty-Italic-Variable.woff2` (378 KB) | Web italic, full glyph set |
 | `Inty-Italic-Variable-subset.woff2` (156 KB) | Web italic, Latin + punctuation |
 | `Inty-Variable.ttf` / `Inty-Italic-Variable.ttf` | Desktop install / design tools (Figma etc.) |
@@ -50,6 +52,11 @@ sizes the Display cut.
 
 - Italic: same treatment (ss07 frozen, straight t as a parallelogram at the
   9.4° italic angle, squared ¡ ¿ ÷). Use normal CSS `font-style: italic`.
+- The `-Web` files keep both variable axes and the useful features (ss03, ss08,
+  tnum, zero, case, kern, calt) but drop everything else: ASCII + curly
+  quotes/dashes/ellipsis/¡¿©®™°·•×÷€£¥¢§ only, no hinting, no small caps or
+  fraction machinery. Accented characters fall back to the next font in the
+  stack — swap in the `-subset` files if a page needs them.
 - License: SIL OFL 1.1 (Inter, Copyright 2020 The Inter Project Authors),
   renamed per OFL. Free for anything, don't sell it standalone.
 - Sibling of `../bitsy/` (static Inter Display cut w/ square tittles + straight
