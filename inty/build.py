@@ -1,30 +1,36 @@
 #!/usr/bin/env python3
 """
-Build Inty — Inter with square punctuation ON by default + straight lowercase t.
+Build Inty — Inter with square punctuation + single-story a ON by default,
+plus a straight lowercase t. Roman and Italic variable fonts.
 
-Base: InterVariable.ttf 4.001 (2 axes: opsz 14-32, wght 100-900).
+Base: InterVariable.ttf / InterVariable-Italic.ttf 4.001
+      (2 axes: opsz 14-32, wght 100-900).
 
-What this does:
-  1. FREEZE ss07 "Square punctuation" — rsms's own square tittles/dots
-     (i, j, period, comma, colon, semicolon, !, ?, ellipsis, dieresis,
-     dot-accents, 250+ glyphs). Done by injecting the ss07 lookup into the
-     always-on `ccmp` feature, so every contextual chain (case, tf, calt)
-     behaves exactly as if the user had enabled ss07. Stock `y` untouched.
+What this does, per source font:
+  1. FREEZE ss07 "Square punctuation" and cv11 "Single-story a" (roman only;
+     the italic has no cv11 — its a is already single-story) by injecting
+     their GSUB lookups into the always-on `ccmp` feature. Lookups apply in
+     LookupList order, so every chain (case, tf, calt, ss07+cv11 combos)
+     behaves exactly as if the user had enabled the features.
   2. SURGERY on glyphs ss07 misses:
-     - t, t.1        : remove the curved foot -> straight vertical stem
-     - exclamdown(.case), questiondown : round dot -> square (sized from
-                       exclam.ss07 / question.ss07 dots, top at x-height)
-     - divide(.case/.tf/...) : round dots -> squares (sized from period.ss07)
-     Surgery is done across the full 2-axis design space: outlines are
-     computed at the 6 corner/default masters and written back as fresh
-     gvar tuples mirroring Inter's own variation model.
-  3. RENAME family (Inter -> Inty), keep all OpenType features working
-     (cv11 single-story a, ss03 round quotes & commas, ss08 square quotes,
-     tnum, case, ...).
+     - t, t.1        : curved foot removed -> straight stem. Roman: rectangle.
+                       Italic: parallelogram at the font's italic angle (the
+                       slant model reproduces Inter's real stem edges exactly).
+     - exclamdown(.case), questiondown : round dot -> rsms's ss07 dot shape
+                       (copied from exclam.ss07 / question.ss07 and translated
+                       to the circle's center — in the italic those dots are
+                       slanted parallelograms, so copy-and-place, not rects)
+     - divide(.case/.tf/...) : round dots -> period.ss07 dot shape, same way
+     Surgery runs across the full 2-axis design space: outlines are computed
+     at the 6 corner/default masters and written back as fresh gvar tuples
+     mirroring Inter's own variation model.
+  3. RENAME family (Inter -> Inty), keep all OpenType features toggleable
+     (ss03 round quotes & commas, ss08 square quotes, tnum, case, ...).
 
-Outputs (output/): Inty-Variable.ttf, Inty-Variable.woff2 (full),
-Inty-Variable-subset.woff2 (Latin + punctuation), inty.css
+Outputs (output/): Inty-Variable[-Italic].ttf + .woff2 (full) +
+-subset.woff2 (Latin + punctuation), combined inty.css
 """
+import math
 import os
 from pathlib import Path
 from fontTools.ttLib import TTFont
@@ -35,12 +41,19 @@ from fontTools.varLib.instancer import instantiateVariableFont
 from fontTools import subset
 
 FAMILY = "Inty"
-SRC = "/Users/x/claude/inter-straight/inter-fresh/InterVariable.ttf"
+SRC_DIR = "/Users/x/claude/inter-straight/inter-fresh"
 OUT = Path(__file__).parent / "output"
+
+BUILDS = [
+    # (source, subfamily, output stem, css font-style)
+    (f"{SRC_DIR}/InterVariable.ttf", "Regular", f"{FAMILY}-Variable", "normal"),
+    (f"{SRC_DIR}/InterVariable-Italic.ttf", "Italic", f"{FAMILY}-Italic-Variable", "italic"),
+]
+
+FREEZE_FEATURES = ["ss07", "cv11"]  # square punctuation + single-story a
 
 # Design-space masters: default + corners (Inter's own model: wght 100/400/900
 # crossed with opsz 14/32; avar handles the in-between weight bending).
-DEFAULT_LOC = {"opsz": 14, "wght": 400}
 MASTER_LOCS = [
     {"opsz": 14, "wght": 400},   # 0: default (base outline)
     {"opsz": 32, "wght": 400},   # 1
@@ -49,8 +62,7 @@ MASTER_LOCS = [
     {"opsz": 32, "wght": 100},   # 4
     {"opsz": 32, "wght": 900},   # 5
 ]
-# gvar tuple axes (mirrors Inter's structure), each paired below with the
-# master indices used to compute its delta.
+# gvar tuple axes (mirrors Inter's structure), each paired with the delta kind.
 TUPLES = [
     ({"opsz": (0, 1, 1)},                          "opsz"),
     ({"wght": (-1.0, -1.0, 0)},                    "wmin"),
@@ -96,16 +108,15 @@ def bbox(pts):
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def make_rect(left, bottom, w, h):
-    """4-point on-curve rectangle (CW in TrueType y-up terms)."""
-    r, t = round(left + w), round(bottom + h)
-    left, bottom = round(left), round(bottom)
-    return [(left, bottom), (left, t), (r, t), (r, bottom)], [1, 1, 1, 1]
+def center(pts):
+    x0, y0, x1, y1 = bbox(pts)
+    return (x0 + x1) / 2, (y0 + y1) / 2
 
 
-def find_dot_rect(glyf, ref_name):
-    """Width/height of the dot contour in an ss07 glyph: the smallest-area
-    4-point rect (the bar of ! is also 4 points, so 'first 4-pt' is wrong)."""
+def find_dot_contour(glyf, ref_name):
+    """The dot contour of an ss07 glyph: the smallest-bbox-area 4-point
+    contour (the bar of ! is also 4 points, so 'first 4-pt' is wrong).
+    Returns its points (roman: rect, italic: slanted parallelogram)."""
     coords, flags, ends = get_outline(glyf, ref_name)
     best = None
     for c, f in contours_of(coords, flags, ends):
@@ -113,17 +124,17 @@ def find_dot_rect(glyf, ref_name):
             x0, y0, x1, y1 = bbox(c)
             area = (x1 - x0) * (y1 - y0)
             if best is None or area < best[0]:
-                best = (area, x1 - x0, y1 - y0)
+                best = (area, c)
     if best is None:
-        raise ValueError(f"no 4-pt rect contour in {ref_name}")
-    return best[1], best[2]
+        raise ValueError(f"no 4-pt dot contour in {ref_name}")
+    return best[1]
 
 
-def x_height(font):
-    """Top of squared period? No — use OS/2 sxHeight equivalent: top of x."""
-    glyf = font["glyf"]
-    coords, _, _ = glyf["x"].getCoordinates(glyf)
-    return max(p[1] for p in coords)
+def place_dot(ref_pts, target_cx, target_cy):
+    """Translate a copied dot contour so its bbox center lands on target."""
+    cx, cy = center(ref_pts)
+    dx, dy = target_cx - cx, target_cy - cy
+    return ([(round(x + dx), round(y + dy)) for x, y in ref_pts], [1, 1, 1, 1])
 
 
 # ---------------------------------------------------------------------------
@@ -132,73 +143,73 @@ def x_height(font):
 # ---------------------------------------------------------------------------
 
 def straighten_t(font, name):
-    """Replace the curved-foot stem contour with a straight rectangle.
+    """Replace the curved-foot stem contour with a straight stem.
 
     Inter's t = crossbar contour (4 pts) + stem contour (16 pts, curves
-    right into a foot at the baseline). Keep the crossbar untouched, turn
-    the stem into stem_left/right rect from baseline to the original top.
+    right into a foot at the baseline). Keep the crossbar untouched; the
+    stem becomes a parallelogram from the horizontal top edge down to the
+    baseline at the font's italic angle (slant 0 -> plain rectangle).
+    Verified: the slant model reproduces Inter Italic's real stem edges
+    to the unit.
     """
     glyf = font["glyf"]
+    slant = math.tan(math.radians(-font["post"].italicAngle))
     coords, flags, ends = get_outline(glyf, name)
     cons = contours_of(coords, flags, ends)
     assert len(cons) == 2, f"{name}: expected 2 contours, got {len(cons)}"
 
-    # Stem = contour with more points; crossbar = the 4-pt rect
+    # Stem = contour with more points; crossbar = the 4-pt one
     stem_i = 0 if len(cons[0][0]) > len(cons[1][0]) else 1
     cross = cons[1 - stem_i]
     stem_c, _ = cons[stem_i]
 
     top_y = max(p[1] for p in stem_c)
-    # Stem x-edges: the two x values of points AT the top
     top_xs = sorted({p[0] for p in stem_c if p[1] == top_y})
     assert len(top_xs) == 2, f"{name}: ambiguous stem top {top_xs}"
-    sl, sr = top_xs
+    tl, tr = top_xs
+    bl, br = tl - slant * top_y, tr - slant * top_y
 
-    stem_rect = make_rect(sl, 0, sr - sl, top_y)
+    stem = ([(round(bl), 0), (round(tl), top_y), (round(tr), top_y), (round(br), 0)],
+            [1, 1, 1, 1])
     new = [None, None]
     new[1 - stem_i] = cross
-    new[stem_i] = stem_rect
+    new[stem_i] = stem
     return join_contours(new)
 
 
 def square_down_dot(font, name, ref):
-    """exclamdown/questiondown: replace the round TOP dot with a square.
-
-    Size from the ss07 reference glyph's dot; the circle's center is
-    preserved (this is how rsms positions his own ss07 squares, and it
-    stays correct for the raised .case variants).
-    """
+    """exclamdown/questiondown: replace the round TOP dot with rsms's ss07
+    dot shape (copied from the ref glyph, centered on the circle's center —
+    his own positioning convention; stays correct for .case variants)."""
     glyf = font["glyf"]
     coords, flags, ends = get_outline(glyf, name)
     cons = contours_of(coords, flags, ends)
-    w, h = find_dot_rect(glyf, ref)
+    ref_dot = find_dot_contour(glyf, ref)
 
     # Dot = round contour (>6 pts) whose bbox top is the glyph's top
     tops = [(max(p[1] for p in c), i) for i, (c, f) in enumerate(cons)]
     dot_i = max(tops)[1]
     dot_c, _ = cons[dot_i]
     assert len(dot_c) > 6, f"{name}: dot contour looks wrong ({len(dot_c)} pts)"
-    x0, y0, x1, y1 = bbox(dot_c)
-    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    cx, cy = center(dot_c)
 
-    cons[dot_i] = make_rect(cx - w / 2, cy - h / 2, w, h)
+    cons[dot_i] = place_dot(ref_dot, cx, cy)
     return join_contours(cons)
 
 
 def square_divide(font, name):
-    """divide: keep the bar, replace both round dots with period.ss07-sized
-    squares centered on the original circles."""
+    """divide: keep the bar, replace both round dots with period.ss07's
+    dot shape centered on the original circles."""
     glyf = font["glyf"]
     coords, flags, ends = get_outline(glyf, name)
     cons = contours_of(coords, flags, ends)
-    w, h = find_dot_rect(glyf, "period.ss07")
+    ref_dot = find_dot_contour(glyf, "period.ss07")
 
     out = []
     for c, f in cons:
         if len(c) > 6:  # circle
-            x0, y0, x1, y1 = bbox(c)
-            cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-            out.append(make_rect(cx - w / 2, cy - h / 2, w, h))
+            cx, cy = center(c)
+            out.append(place_dot(ref_dot, cx, cy))
         else:           # bar
             out.append((c, f))
     return join_contours(out)
@@ -238,9 +249,7 @@ def apply_vf_surgery(vf, pinned):
             print(f"    - {name}: composite of {comps}, inherits")
             continue
         # Compute modified outline at every master
-        results = []
-        for p in pinned:
-            results.append(fn(p, name, *extra))
+        results = [fn(p, name, *extra) for p in pinned]
         # Topology must be identical everywhere
         _, f0, e0 = results[0]
         for (c, f, e) in results[1:]:
@@ -284,23 +293,21 @@ def apply_vf_surgery(vf, pinned):
 
 
 # ---------------------------------------------------------------------------
-# Freeze ss07 by injecting its lookups into always-on `ccmp`
+# Freeze features by injecting their lookups into always-on `ccmp`
 # ---------------------------------------------------------------------------
 
-FREEZE_FEATURES = ["ss07", "cv11"]  # square punctuation + single-story a
-
-
 def freeze_features(vf):
-    """Inject the frozen features' lookups into always-on `ccmp`. Lookups
-    apply in LookupList order, so chains behave exactly as if the user had
-    enabled the features (cv11's lookup 86 runs after ss07's 74 and maps
-    the .ss07 composed forms too)."""
     gsub = vf["GSUB"].table
-    inject = set()
+    inject, found = set(), []
     for fr in gsub.FeatureList.FeatureRecord:
         if fr.FeatureTag in FREEZE_FEATURES:
             inject.update(fr.Feature.LookupListIndex)
-    assert inject, "freeze features not found"
+            if fr.FeatureTag not in found:
+                found.append(fr.FeatureTag)
+    missing = [t for t in FREEZE_FEATURES if t not in found]
+    if missing:
+        print(f"    note: {missing} not in this font (italic a is already single-story)")
+    assert inject, "no freeze features found"
 
     n = 0
     for fr in gsub.FeatureList.FeatureRecord:
@@ -310,27 +317,27 @@ def freeze_features(vf):
             fr.Feature.LookupCount = len(merged)
             n += 1
     assert n > 0, "no ccmp feature records to inject into"
-    print(f"    lookups {sorted(inject)} ({'+'.join(FREEZE_FEATURES)}) injected into {n} ccmp record(s)")
+    print(f"    lookups {sorted(inject)} ({'+'.join(found)}) injected into {n} ccmp record(s)")
 
 
 # ---------------------------------------------------------------------------
 # Rename
 # ---------------------------------------------------------------------------
 
-def rename(vf):
+def rename(vf, subfamily):
     name = vf["name"]
+    ps_sub = subfamily.replace(" ", "")
     reps = {
         1: FAMILY,
-        3: f"{FAMILY}-Variable",
-        4: f"{FAMILY} Regular",
-        6: f"{FAMILY}-Regular",
+        3: f"{FAMILY}-Variable-{ps_sub}",
+        4: f"{FAMILY} {subfamily}",
+        6: f"{FAMILY}-{ps_sub}",
         16: FAMILY,
-        25: FAMILY.replace(" ", ""),
+        25: FAMILY.replace(" ", "") + ("Italic" if subfamily == "Italic" else ""),
     }
-    # Copyright: append modification note
     for rec in name.names:
         if rec.nameID == 0:
-            reps[0] = str(rec.toUnicode()) + f" Modified {FAMILY} variant (square punctuation default, straight t)."
+            reps[0] = str(rec.toUnicode()) + f" Modified {FAMILY} variant (square punctuation + single-story a default, straight t)."
             break
     for nid, val in reps.items():
         existing_platforms = {(r.platformID, r.platEncID, r.langID)
@@ -347,7 +354,7 @@ def rename(vf):
 SUBSET_UNICODES = (
     list(range(0x0020, 0x0250)) +        # Latin, Latin-1, Ext-A/B
     list(range(0x02C6, 0x02DE)) +        # spacing modifier accents
-    list(range(0x2000, 0x2070)) +        # general punctuation (quotes, dashes, ellipsis, bullet)
+    list(range(0x2000, 0x2070)) +        # general punctuation
     [0x20AC, 0x2122, 0x2212, 0x00D7, 0x00F7, 0x2192, 0x2190, 0x2191, 0x2193]
 )
 
@@ -357,7 +364,6 @@ def export_subset(ttf_path, out_path):
     opts.layout_features = ["*"]         # keep every GSUB/GPOS feature
     opts.name_IDs = ["*"]
     opts.notdef_outline = True
-    opts.flavor = "woff2"
     s = subset.Subsetter(options=opts)
     s.populate(unicodes=SUBSET_UNICODES)
     f = TTFont(str(ttf_path))
@@ -367,13 +373,12 @@ def export_subset(ttf_path, out_path):
     f.close()
 
 
-def main():
-    OUT.mkdir(exist_ok=True)
-    print(f"Loading {SRC}")
-    vf = TTFont(SRC)
+def build_one(src, subfamily, stem):
+    print(f"Loading {src}")
+    vf = TTFont(src)
 
     print("  Pinning 6 masters for surgery geometry...")
-    pinned = [instantiateVariableFont(TTFont(SRC), loc, inplace=False)
+    pinned = [instantiateVariableFont(TTFont(src), loc, inplace=False)
               for loc in MASTER_LOCS]
 
     print("  Surgery:")
@@ -382,39 +387,45 @@ def main():
     print("  Freezing features:")
     freeze_features(vf)
 
-    print("  Renaming:")
-    rename(vf)
+    rename(vf, subfamily)
 
-    ttf = OUT / f"{FAMILY}-Variable.ttf"
+    ttf = OUT / f"{stem}.ttf"
     vf.save(str(ttf))
-    print(f"  Saved {ttf} ({os.path.getsize(ttf)/1024:.0f} KB)")
+    print(f"  Saved {ttf.name} ({os.path.getsize(ttf)/1024:.0f} KB)")
 
-    w2 = OUT / f"{FAMILY}-Variable.woff2"
+    w2 = OUT / f"{stem}.woff2"
     f2 = TTFont(str(ttf))
     f2.flavor = "woff2"
     f2.save(str(w2))
-    print(f"  Saved {w2} ({os.path.getsize(w2)/1024:.0f} KB)")
+    print(f"  Saved {w2.name} ({os.path.getsize(w2)/1024:.0f} KB)")
 
-    ws = OUT / f"{FAMILY}-Variable-subset.woff2"
+    ws = OUT / f"{stem}-subset.woff2"
     export_subset(ttf, ws)
-    print(f"  Saved {ws} ({os.path.getsize(ws)/1024:.0f} KB)")
+    print(f"  Saved {ws.name} ({os.path.getsize(ws)/1024:.0f} KB)")
 
-    css = OUT / "inty.css"
-    css.write_text(f"""/* {FAMILY} — Inter with square punctuation + straight t (OFL 1.1)
- * Variable: wght 100-900, opsz 14-32 (auto via font-optical-sizing)
- * All Inter features intact: cv11 single-story a, ss03 round quotes & commas,
- * ss08 square quotes, tnum, case, ... e.g. font-feature-settings: 'cv11' 1;
- */
-@font-face {{
+
+def main():
+    OUT.mkdir(exist_ok=True)
+    css_blocks = []
+    for src, subfamily, stem, style in BUILDS:
+        build_one(src, subfamily, stem)
+        css_blocks.append(f"""@font-face {{
   font-family: "{FAMILY}";
-  font-style: normal;
+  font-style: {style};
   font-weight: 100 900;
   font-display: swap;
-  src: url("{FAMILY}-Variable.woff2") format("woff2");
-}}
-""")
-    print(f"  Saved {css}")
-    print("Done.")
+  src: url("{stem}-subset.woff2") format("woff2");
+}}""")
+
+    css = OUT / "inty.css"
+    css.write_text(f"""/* {FAMILY} — Inter with square punctuation + single-story a + straight t (OFL 1.1)
+ * Variable: wght 100-900, opsz 14-32 (auto via font-optical-sizing)
+ * Inter features intact: ss03 round quotes & commas, ss08 square quotes,
+ * tnum, case, ... e.g. font-feature-settings: 'ss03' 1;
+ * Swap -subset for the full files if you need beyond Latin+punctuation.
+ */
+""" + "\n\n".join(css_blocks) + "\n")
+    print(f"Saved {css.name}\nDone.")
 
 
 if __name__ == "__main__":

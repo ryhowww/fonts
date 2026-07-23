@@ -7,7 +7,8 @@ from InterVariable 4.001 with three changes baked in as the defaults:
    period/colon/semicolon/!/?/ellipsis/comma, square dieresis + dot accents on
    250+ accented glyphs), frozen on. Plus hand-squared dots on ¡ ¿ ÷ which ss07
    misses.
-2. **Single-story a** — rsms's cv11, frozen on (including all accented a forms).
+2. **Single-story a** — rsms's cv11, frozen on (including all accented a
+   forms). The italic needs no freeze: Inter Italic's a is single-story natively.
 3. **Straight lowercase t** — the curved foot removed; straight vertical stem,
    stock crossbar. Custom outline surgery across the full design space (also
    applied to the compact-t alternate). This glyph does not exist in stock Inter.
@@ -22,8 +23,10 @@ remain live and toggleable — notably `ss03` (round quotes & commas back),
 |------|-----|
 | `Inty-Variable.woff2` (344 KB) | Web, full glyph set |
 | `Inty-Variable-subset.woff2` (142 KB) | Web, Latin + punctuation (use this for sites) |
-| `Inty-Variable.ttf` (858 KB) | Desktop install / design tools (Figma etc.) |
-| `inty.css` | @font-face declaration |
+| `Inty-Italic-Variable.woff2` (378 KB) | Web italic, full glyph set |
+| `Inty-Italic-Variable-subset.woff2` (156 KB) | Web italic, Latin + punctuation |
+| `Inty-Variable.ttf` / `Inty-Italic-Variable.ttf` | Desktop install / design tools (Figma etc.) |
+| `inty.css` | @font-face declarations (roman + italic) |
 | `index.html` | Self-contained specimen/preview (fonts embedded) |
 | `build.py` | Reproducible build (needs local InterVariable.ttf + fontTools) |
 
@@ -45,7 +48,8 @@ sizes the Display cut.
 
 ## Notes
 
-- **No italic yet** — InterVariable-Italic hasn't been run through the build.
+- Italic: same treatment (ss07 frozen, straight t as a parallelogram at the
+  9.4° italic angle, squared ¡ ¿ ÷). Use normal CSS `font-style: italic`.
 - License: SIL OFL 1.1 (Inter, Copyright 2020 The Inter Project Authors),
   renamed per OFL. Free for anything, don't sell it standalone.
 - Sibling of `../bitsy/` (static Inter Display cut w/ square tittles + straight
